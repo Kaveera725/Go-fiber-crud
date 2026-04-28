@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"go-fiber-crud/internal/database"
+	"go-fiber-crud/internal/models"
 )
 
 type ProductHandler struct {
@@ -20,11 +21,18 @@ func NewProductHandler(db *database.DB) *ProductHandler {
 // List renders the product list page.
 func (h *ProductHandler) List(c *fiber.Ctx) error {
 	nameFilter := c.Query("name")
+	success := c.Query("success")
+	errorMessage := c.Query("error")
 	products, err := h.DB.ListProducts(c.Context(), nameFilter)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	return c.Render("index", fiber.Map{"Products": products, "FilterName": nameFilter}, "layouts/base")
+	return c.Render("index", fiber.Map{
+		"Products":   products,
+		"FilterName": nameFilter,
+		"Success":    success,
+		"Error":      errorMessage,
+	}, "layouts/base")
 }
 
 // NewForm renders the create-product page.
@@ -37,29 +45,39 @@ func (h *ProductHandler) Create(c *fiber.Ctx) error {
 	name := c.FormValue("name")
 	priceStr := c.FormValue("price")
 	quantityStr := c.FormValue("quantity")
+	viewData := fiber.Map{
+		"FormName":     name,
+		"FormPrice":    priceStr,
+		"FormQuantity": quantityStr,
+	}
 
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid price")
+		viewData["Error"] = "invalid price"
+		return c.Status(fiber.StatusBadRequest).Render("new", viewData, "layouts/base")
 	}
 
 	quantity, err := strconv.Atoi(quantityStr)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid quantity")
+		viewData["Error"] = "invalid quantity"
+		return c.Status(fiber.StatusBadRequest).Render("new", viewData, "layouts/base")
 	}
 
 	if name == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "name is required")
+		viewData["Error"] = "name is required"
+		return c.Status(fiber.StatusBadRequest).Render("new", viewData, "layouts/base")
 	}
 
 	if quantity < 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "quantity must be 0 or greater")
+		viewData["Error"] = "quantity must be 0 or greater"
+		return c.Status(fiber.StatusBadRequest).Render("new", viewData, "layouts/base")
 	}
 
 	if err := h.DB.CreateProduct(c.Context(), name, price, quantity); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		viewData["Error"] = "failed to create product"
+		return c.Status(fiber.StatusInternalServerError).Render("new", viewData, "layouts/base")
 	}
-	return c.Redirect("/")
+	return c.Redirect("/?success=Product%20created")
 }
 
 // EditForm loads a product and renders the edit page.
@@ -87,29 +105,42 @@ func (h *ProductHandler) Update(c *fiber.Ctx) error {
 	name := c.FormValue("name")
 	priceStr := c.FormValue("price")
 	quantityStr := c.FormValue("quantity")
+	viewData := fiber.Map{
+		"FormName":     name,
+		"FormPrice":    priceStr,
+		"FormQuantity": quantityStr,
+		"Product":      models.Product{ID: id, Name: name},
+	}
 
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid price")
+		viewData["Error"] = "invalid price"
+		return c.Status(fiber.StatusBadRequest).Render("edit", viewData, "layouts/base")
 	}
+	viewData["Product"] = models.Product{ID: id, Name: name, Price: price}
 
 	quantity, err := strconv.Atoi(quantityStr)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid quantity")
+		viewData["Error"] = "invalid quantity"
+		return c.Status(fiber.StatusBadRequest).Render("edit", viewData, "layouts/base")
 	}
+	viewData["Product"] = models.Product{ID: id, Name: name, Price: price, Quantity: quantity}
 
 	if name == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "name is required")
+		viewData["Error"] = "name is required"
+		return c.Status(fiber.StatusBadRequest).Render("edit", viewData, "layouts/base")
 	}
 
 	if quantity < 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "quantity must be 0 or greater")
+		viewData["Error"] = "quantity must be 0 or greater"
+		return c.Status(fiber.StatusBadRequest).Render("edit", viewData, "layouts/base")
 	}
 
 	if err := h.DB.UpdateProduct(c.Context(), id, name, price, quantity); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		viewData["Error"] = "failed to update product"
+		return c.Status(fiber.StatusInternalServerError).Render("edit", viewData, "layouts/base")
 	}
-	return c.Redirect("/")
+	return c.Redirect("/?success=Product%20updated")
 }
 
 // Delete removes a product and returns to the list.
@@ -122,5 +153,5 @@ func (h *ProductHandler) Delete(c *fiber.Ctx) error {
 	if err := h.DB.DeleteProduct(c.Context(), id); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	return c.Redirect("/")
+	return c.Redirect("/?success=Product%20deleted")
 }
