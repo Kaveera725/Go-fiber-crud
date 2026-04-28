@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -62,10 +63,14 @@ func (db *DB) Close() {
 	sqlDB.Close()
 }
 
-// ListProducts returns all products ordered by newest first.
-func (db *DB) ListProducts(ctx context.Context) ([]models.Product, error) {
+// ListProducts returns products ordered by newest first, optionally filtered by name.
+func (db *DB) ListProducts(ctx context.Context, nameFilter string) ([]models.Product, error) {
 	var products []models.Product
-	err := db.ORM.WithContext(ctx).Order("id desc").Find(&products).Error
+	query := db.ORM.WithContext(ctx).Order("id desc")
+	if strings.TrimSpace(nameFilter) != "" {
+		query = query.Where("name ILIKE ?", "%"+nameFilter+"%")
+	}
+	err := query.Find(&products).Error
 	return products, err
 }
 

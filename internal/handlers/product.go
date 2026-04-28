@@ -19,11 +19,12 @@ func NewProductHandler(db *database.DB) *ProductHandler {
 
 // List renders the product list page.
 func (h *ProductHandler) List(c *fiber.Ctx) error {
-	products, err := h.DB.ListProducts(c.Context())
+	nameFilter := c.Query("name")
+	products, err := h.DB.ListProducts(c.Context(), nameFilter)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	return c.Render("index", fiber.Map{"Products": products}, "layouts/base")
+	return c.Render("index", fiber.Map{"Products": products, "FilterName": nameFilter}, "layouts/base")
 }
 
 // NewForm renders the create-product page.

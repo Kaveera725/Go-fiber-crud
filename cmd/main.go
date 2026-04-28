@@ -28,6 +28,7 @@ func main() {
 	defer db.Close()
 
 	engine := htmltmpl.New("./views", ".html")
+	engine.Reload(true)
 
 	app := fiber.New(fiber.Config{Views: engine})
 

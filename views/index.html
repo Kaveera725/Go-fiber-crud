@@ -1,4 +1,16 @@
-<div class="bg-white border rounded">
+<div class="bg-white border rounded p-4">
+  <form method="get" action="/" class="mb-4 flex gap-3">
+    <input
+      name="name"
+      class="w-full border rounded p-2"
+      placeholder="Filter by name"
+      value="{{ .FilterName }}"
+    />
+    <button type="submit" class="px-4 py-2 rounded bg-black text-white">Filter</button>
+    <a href="/" class="px-4 py-2 rounded border">Clear</a>
+  </form>
+
+  <div class="border rounded">
   <table class="w-full text-left">
     <thead>
       <tr class="border-b bg-gray-50">
@@ -32,4 +44,5 @@
       {{ end }}
     </tbody>
   </table>
+  </div>
 </div>
