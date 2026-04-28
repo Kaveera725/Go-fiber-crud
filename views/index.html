@@ -1,0 +1,33 @@
+<div class="bg-white border rounded">
+  <table class="w-full text-left">
+    <thead>
+      <tr class="border-b bg-gray-50">
+        <th class="p-3">ID</th>
+        <th class="p-3">Name</th>
+        <th class="p-3">Price</th>
+        <th class="p-3">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ if .Products }}
+        {{ range .Products }}
+          <tr class="border-b">
+            <td class="p-3">{{ .ID }}</td>
+            <td class="p-3">{{ .Name }}</td>
+            <td class="p-3">{{ printf "%.2f" .Price }}</td>
+            <td class="p-3">
+              <a class="underline" href="/products/{{ .ID }}/edit">Edit</a>
+              <form class="inline" method="post" action="/products/{{ .ID }}/delete">
+                <button class="underline ml-3" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {{ end }}
+      {{ else }}
+        <tr>
+          <td class="p-3" colspan="4">No products yet.</td>
+        </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
