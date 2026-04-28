@@ -12,10 +12,12 @@ type ProductHandler struct {
 	DB *database.DB
 }
 
+// NewProductHandler wires a ProductHandler with its dependencies.
 func NewProductHandler(db *database.DB) *ProductHandler {
 	return &ProductHandler{DB: db}
 }
 
+// List renders the product list page.
 func (h *ProductHandler) List(c *fiber.Ctx) error {
 	products, err := h.DB.ListProducts(c.Context())
 	if err != nil {
@@ -24,10 +26,12 @@ func (h *ProductHandler) List(c *fiber.Ctx) error {
 	return c.Render("index", fiber.Map{"Products": products}, "layouts/base")
 }
 
+// NewForm renders the create-product page.
 func (h *ProductHandler) NewForm(c *fiber.Ctx) error {
 	return c.Render("new", fiber.Map{}, "layouts/base")
 }
 
+// Create validates input and inserts a new product.
 func (h *ProductHandler) Create(c *fiber.Ctx) error {
 	name := c.FormValue("name")
 	priceStr := c.FormValue("price")
@@ -45,6 +49,7 @@ func (h *ProductHandler) Create(c *fiber.Ctx) error {
 	return c.Redirect("/")
 }
 
+// EditForm loads a product and renders the edit page.
 func (h *ProductHandler) EditForm(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -59,6 +64,7 @@ func (h *ProductHandler) EditForm(c *fiber.Ctx) error {
 	return c.Render("edit", fiber.Map{"Product": product}, "layouts/base")
 }
 
+// Update validates input and updates an existing product.
 func (h *ProductHandler) Update(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -81,6 +87,7 @@ func (h *ProductHandler) Update(c *fiber.Ctx) error {
 	return c.Redirect("/")
 }
 
+// Delete removes a product and returns to the list.
 func (h *ProductHandler) Delete(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {

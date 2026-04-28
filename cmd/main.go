@@ -14,6 +14,7 @@ import (
 	"go-fiber-crud/internal/handlers"
 )
 
+// main loads config, initializes dependencies, and starts the HTTP server.
 func main() {
 	_ = godotenv.Load()
 
