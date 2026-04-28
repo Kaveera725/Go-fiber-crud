@@ -35,15 +35,27 @@ func (h *ProductHandler) NewForm(c *fiber.Ctx) error {
 func (h *ProductHandler) Create(c *fiber.Ctx) error {
 	name := c.FormValue("name")
 	priceStr := c.FormValue("price")
+	quantityStr := c.FormValue("quantity")
+
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid price")
 	}
+
+	quantity, err := strconv.Atoi(quantityStr)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid quantity")
+	}
+
 	if name == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "name is required")
 	}
 
-	if err := h.DB.CreateProduct(c.Context(), name, price); err != nil {
+	if quantity < 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "quantity must be 0 or greater")
+	}
+
+	if err := h.DB.CreateProduct(c.Context(), name, price, quantity); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.Redirect("/")
@@ -73,15 +85,27 @@ func (h *ProductHandler) Update(c *fiber.Ctx) error {
 
 	name := c.FormValue("name")
 	priceStr := c.FormValue("price")
+	quantityStr := c.FormValue("quantity")
+
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid price")
 	}
+
+	quantity, err := strconv.Atoi(quantityStr)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid quantity")
+	}
+
 	if name == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "name is required")
 	}
 
-	if err := h.DB.UpdateProduct(c.Context(), id, name, price); err != nil {
+	if quantity < 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "quantity must be 0 or greater")
+	}
+
+	if err := h.DB.UpdateProduct(c.Context(), id, name, price, quantity); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.Redirect("/")
